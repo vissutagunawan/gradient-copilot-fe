@@ -1,6 +1,7 @@
 import { Message as MessageType, MaterialRecommendation } from '@/types';
 import { User, Bot, Image as ImageIcon } from 'lucide-react';
 import MaterialRecommendations from './MaterialRecommendations';
+import Image from 'next/image';
 
 interface MessageProps {
   message: MessageType;
@@ -34,10 +35,13 @@ export default function Message({ message, materials }: MessageProps) {
                 <ImageIcon className="w-4 h-4" />
                 <span>Gambar dikirim</span>
               </div>
-              <img
+              <Image
                 src={message.image}
                 alt="Uploaded image"
+                width={500}
+                height={300}
                 className="max-w-full h-auto rounded border"
+                style={{ objectFit: 'contain' }}
               />
             </div>
           )}
