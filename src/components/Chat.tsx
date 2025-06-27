@@ -1,25 +1,57 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Message as MessageType } from '@/types';
 import Message from './Message';
+import ChatInput from './ChatInput';
 
 export default function Chat() {
-  // Dummy message data
-  const [messages] = useState<MessageType[]>([
-    {
-      id: '1',
-      content: 'Halo! Bisakah kamu jelaskan tentang machine learning?',
+  const [messages, setMessages] = useState<MessageType[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const generateId = () => {
+    return Math.random().toString(36).substr(2, 9);
+  };
+
+  const handleSendMessage = async (content: string) => {
+    if (!content.trim() || isLoading) return;
+
+    // Add user message
+    const userMessage: MessageType = {
+      id: generateId(),
+      content: content,
       role: 'user',
-      timestamp: new Date(Date.now() - 120000),
-    },
-    {
-      id: '2',
-      content: 'Tentu! Machine Learning adalah cabang dari kecerdasan buatan (AI) yang memungkinkan komputer untuk belajar dan membuat keputusan tanpa diprogram secara eksplisit untuk setiap tugas. Sistem ML menggunakan algoritma untuk menganalisis data, mengidentifikasi pola, dan membuat prediksi atau keputusan berdasarkan data tersebut.',
-      role: 'assistant',
-      timestamp: new Date(Date.now() - 60000),
-    }
-  ]);
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    setTimeout(() => {
+      const assistantMessage: MessageType = {
+        id: generateId(),
+        content: `Terima kasih atas pertanyaan: "${content}". Ini adalah respons sementara.`,
+        role: 'assistant',
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  const clearChat = () => {
+    setMessages([]);
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -31,12 +63,14 @@ export default function Chat() {
             <p className="text-sm text-gray-600">Asisten pembelajaran AI Anda</p>
           </div>
           
-          <button
-            className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-            disabled
-          >
-            Hapus Chat
-          </button>
+          {messages.length > 0 && (
+            <button
+              onClick={clearChat}
+              className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+            >
+              Hapus Chat
+            </button>
+          )}
         </div>
       </div>
 
@@ -69,24 +103,19 @@ export default function Chat() {
             />
           ))
         )}
+        
+        {isLoading && (
+          <div className="flex items-center gap-2 text-gray-600">
+            <div className="w-4 h-4 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin"></div>
+            <span className="text-sm">Gradient Copilot sedang mengetik...</span>
+          </div>
+        )}
+        
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Area Input */}
-      <div className="border-t border-gray-200 bg-white p-4">
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <textarea
-              placeholder="Ketik pertanyaan Anda di sini..."
-              className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              rows={1}
-              disabled
-            />
-          </div>
-        </div>
-        <div className="mt-2 text-xs text-gray-500">
-          Input fungsionalitas akan ditambahkan di commit berikutnya
-        </div>
-      </div>
+      <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
     </div>
   );
 }
