@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Message as MessageType } from '@/types';
+import { Message as MessageType, MaterialRecommendation } from '@/types';
 import Message from './Message';
 import ChatInput from './ChatInput';
 
 export default function Chat() {
   const [messages, setMessages] = useState<MessageType[]>([]);
+  const [materials, setMaterials] = useState<{ [messageId: string]: MaterialRecommendation[] }>({});
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -22,35 +23,111 @@ export default function Chat() {
     return Math.random().toString(36).substr(2, 9);
   };
 
-  const handleSendMessage = async (content: string) => {
-    if (!content.trim() || isLoading) return;
+  // Demo materials for testing
+  const getDemoMaterials = (query: string): MaterialRecommendation[] => {
+    if (query.toLowerCase().includes('ekonomi')) {
+      return [
+        {
+          title: "Pengantar Ekonomi Mikro",
+          url: "https://example.com/ekonomi-mikro",
+          description: "Dasar-dasar ekonomi mikro dan teori konsumen",
+          source: "Khan Academy"
+        },
+        {
+          title: "Ekonomi Makro untuk Pemula",
+          url: "https://example.com/ekonomi-makro", 
+          description: "Konsep GDP, inflasi, dan kebijakan moneter",
+          source: "Coursera"
+        }
+      ];
+    } else if (query.toLowerCase().includes('machine learning') || query.toLowerCase().includes('ml')) {
+      return [
+        {
+          title: "Machine Learning Crash Course",
+          url: "https://developers.google.com/machine-learning/crash-course",
+          description: "Kursus gratis machine learning dari Google",
+          source: "Google Developers"
+        },
+        {
+          title: "Introduction to Statistical Learning",
+          url: "https://www.statlearning.com/",
+          description: "Buku gratis tentang statistical learning dengan R",
+          source: "Stanford University"
+        }
+      ];
+    }
+    return [];
+  };
 
-    // Add user message
+  const handleSendMessage = async (content: string, image?: File) => {
+    if ((!content.trim() && !image) || isLoading) return;
+
+    let imagePreview: string | undefined;
+
+    if (image) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreview = e.target?.result as string;
+      };
+      reader.readAsDataURL(image);
+      
+      await new Promise(resolve => {
+        reader.onload = (e) => {
+          imagePreview = e.target?.result as string;
+          resolve(null);
+        };
+      });
+    }
+
     const userMessage: MessageType = {
       id: generateId(),
-      content: content,
+      content: content || '[Gambar dikirim]',
       role: 'user',
       timestamp: new Date(),
+      image: imagePreview,
     };
 
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
+    // Simulate API response with materials
     setTimeout(() => {
+      const assistantMessageId = generateId();
+      let responseContent = '';
+      
+      if (image && content) {
+        responseContent = `Terima kasih atas pertanyaan dan gambar: "${content}". Saya akan menganalisis gambar dan memberikan materi pembelajaran yang relevan. Integrasi API penuh akan ditambahkan di commit berikutnya.`;
+      } else if (image) {
+        responseContent = `Saya melihat gambar yang Anda upload. Analisis gambar dan rekomendasi materi akan tersedia dengan integrasi API lengkap.`;
+      } else {
+        responseContent = `Terima kasih atas pertanyaan: "${content}". Berdasarkan pertanyaan Anda, saya merekomendasikan beberapa materi pembelajaran di bawah ini.`;
+      }
+
       const assistantMessage: MessageType = {
-        id: generateId(),
-        content: `Terima kasih atas pertanyaan: "${content}". Ini adalah respons sementara.`,
+        id: assistantMessageId,
+        content: responseContent,
         role: 'assistant',
         timestamp: new Date(),
       };
       
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Add demo materials if available
+      const demoMaterials = getDemoMaterials(content);
+      if (demoMaterials.length > 0) {
+        setMaterials(prev => ({
+          ...prev,
+          [assistantMessageId]: demoMaterials
+        }));
+      }
+      
       setIsLoading(false);
-    }, 1000);
+    }, 1500);
   };
 
   const clearChat = () => {
     setMessages([]);
+    setMaterials({});
   };
 
   return (
@@ -83,7 +160,7 @@ export default function Chat() {
                 Selamat datang di Gradient Copilot!
               </h2>
               <p className="text-gray-600 mb-4">
-                Saya siap membantu Anda belajar berbagai topik. Kirim pertanyaan untuk memulai.
+                Saya siap membantu Anda belajar berbagai topik. Kirim pertanyaan atau upload gambar untuk memulai.
               </p>
               <div className="text-sm text-gray-500">
                 <p>Contoh pertanyaan:</p>
@@ -100,6 +177,7 @@ export default function Chat() {
             <Message
               key={message.id}
               message={message}
+              materials={materials[message.id]}
             />
           ))
         )}
