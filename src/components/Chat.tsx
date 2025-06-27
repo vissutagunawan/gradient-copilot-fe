@@ -26,9 +26,9 @@ export default function Chat() {
             <div className="text-sm text-gray-500">
               <p>Contoh pertanyaan:</p>
               <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>"Berikan saya materi terkait mata kuliah Ekonomi"</li>
-                <li>"Jelaskan konsep machine learning"</li>
-                <li>"Tutorial belajar React untuk pemula"</li>
+                <li>&quot;Berikan saya materi terkait mata kuliah Ekonomi&quot;</li>
+                <li>&quot;Jelaskan konsep machine learning&quot;</li>
+                <li>&quot;Tutorial belajar React untuk pemula&quot;</li>
               </ul>
             </div>
           </div>
