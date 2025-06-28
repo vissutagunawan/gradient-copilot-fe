@@ -18,3 +18,6 @@ Deployment: https://gradient-copilot-fe.vercel.app
 - 💬 Chat with LLM functionality (text + image support)
 - 📚 Material recommendations aligned with chat UI  
 - 🚀 Deployed to free cloud service (Vercel)
+
+## 🔮 Future Development
+- Smoother rendering (two asterisks wrapped text become bold) -> \*\*abc\*\* (current) becomes **abc**
